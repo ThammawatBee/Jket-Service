@@ -7,10 +7,10 @@ import { PostgresConnectionOptions } from 'typeorm/driver/postgres/PostgresConne
 
 export const postgresDbConfig = (): PostgresConnectionOptions => ({
   type: 'postgres',
-  host: 'localhost',
-  port: 54325,
-  username: 'core',
-  password: 'password',
+  host: 'dpg-cvr5rj6uk2gs73c9mk5g-a.singapore-postgres.render.com',
+  port: 5432,
+  username: 'jtket_user',
+  password: '8RJAjGdU8nGZsxaBzry4clBrtDTWDW0O',
   database: 'jtket',
   schema: 'jtket',
   logging: false,
@@ -18,9 +18,10 @@ export const postgresDbConfig = (): PostgresConnectionOptions => ({
   migrations: [join(__dirname, '../migrations/postgres/*{.ts,.js}')],
   synchronize: true,
   namingStrategy: new SnakeNamingStrategy(),
-  // extra: {
-  //   options: '-c search_path=jtket',
-  // },
+  extra: {
+    options: '-c search_path=jtket',
+  },
+  ssl: true,
 });
 
 if (
