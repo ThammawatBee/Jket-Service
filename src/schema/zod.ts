@@ -48,6 +48,7 @@ const CreateReportSchema = z.object({
   workGroup: z.string().nullable().default(null),
   poNo: z.string().nullable().default(null),
   materialName: z.string(),
+  materialNo: z.string(),
   poQty: z.number(),
   receiveQty: z.number(),
   receiveArea: z.string(),
@@ -61,7 +62,7 @@ const CreateReportSchema = z.object({
 
 export class CreateReport extends createZodDto(
   z.object({ reports: z.array(CreateReportSchema) }),
-) {}
+) { }
 
 const CreateDeliveryReportSchema = z.object({
   venderCode: z.string(),
@@ -90,7 +91,7 @@ const CreateDeliveryReportSchema = z.object({
 
 export class CreateDeliveryReport extends createZodDto(
   z.object({ deliveryReports: z.array(CreateDeliveryReportSchema) }),
-) {}
+) { }
 
 const CreateInvoiceReportSchema = z.object({
   dateShipped: z.string(),
@@ -102,4 +103,4 @@ const CreateInvoiceReportSchema = z.object({
 
 export class CreateInvoiceReport extends createZodDto(
   z.object({ invoiceReports: z.array(CreateInvoiceReportSchema) }),
-) {}
+) { }

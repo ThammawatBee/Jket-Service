@@ -83,6 +83,9 @@ export class Report {
   @Column({ type: 'varchar', nullable: false })
   materialName!: string;
 
+  @Column({ type: 'varchar', nullable: false })
+  materialNo!: string;
+
   @Column({
     nullable: false,
     type: 'integer',

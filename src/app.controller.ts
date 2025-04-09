@@ -38,4 +38,16 @@ export class AppController {
     await this.appService.mergeReportWithDeliveryReport();
     return { status: 'Merge data success' };
   }
+
+  @Get('/reports')
+  async listReports() {
+    const reports = await this.appService.listReports();
+    return { reports };
+  }
+
+  @Get('/deliveries')
+  async listDeliveries() {
+    const deliveryReports = await this.appService.listDeliveryReports();
+    return { deliveryReports };
+  }
 }

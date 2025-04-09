@@ -22,7 +22,7 @@ export class AppService {
     @InjectRepository(Delivery)
     private readonly deliveryRepository: Repository<Delivery>,
     @InjectDataSource() private readonly dataSource: DataSource,
-  ) {}
+  ) { }
   getHello(): string {
     return 'Hello World!';
   }
@@ -45,6 +45,7 @@ export class AppService {
           workGroup: report.workGroup,
           poNo: report.poNo,
           materialName: report.materialName,
+          materialNo: report.materialNo,
           poQty: report.poQty,
           receiveQty: report.receiveQty,
           receiveArea: report.receiveArea,
@@ -127,7 +128,8 @@ export class AppService {
         invoice_invoice_no = CASE del_number ${invoiceInvoiceNoCases} END,
         invoice_customer_order_number = CASE del_number ${invoiceCustomerOrderNumberCases} END,
         invoice_price = CASE del_number ${invoicePriceCases} END,
-        invoice_sales_amount = CASE del_number ${invoiceSalesAmountCase} END
+        invoice_sales_amount = CASE del_number ${invoiceSalesAmountCase} END,
+        updated_at = NOW()
       WHERE del_number IN (${customerOrderNumbers.join(',')});
     `;
     await this.dataSource.query(query);
@@ -192,7 +194,8 @@ export class AppService {
         delivery_following_proc = CASE id ${deliveryFollowingProcCases} END,
         delivery_vat = CASE id ${deliveryVatCases} END,
         delivery_privilege_flag = CASE id ${deliveryPrivilegeFlagCases} END,
-        delivery_reference_no_tag = CASE id ${deliveryReferenceNoTagCases} END
+        delivery_reference_no_tag = CASE id ${deliveryReferenceNoTagCases} END,
+        updated_at = NOW()
       WHERE id IN (${reportIds.join(',')});
     `;
       try {
@@ -209,5 +212,23 @@ export class AppService {
         throw err;
       }
     }
+  }
+
+  public async listReports() {
+    const reports = await this.reportRepository.find({
+      order: {
+        updatedAt: 'DESC',
+      },
+    });
+    return reports;
+  }
+
+  public async listDeliveryReports() {
+    const deliveryReports = await this.deliveryRepository.find({
+      order: {
+        updatedAt: 'DESC',
+      },
+    });
+    return deliveryReports;
   }
 }
