@@ -62,7 +62,7 @@ const CreateReportSchema = z.object({
 
 export class CreateReport extends createZodDto(
   z.object({ reports: z.array(CreateReportSchema) }),
-) { }
+) {}
 
 const CreateDeliveryReportSchema = z.object({
   venderCode: z.string(),
@@ -91,7 +91,7 @@ const CreateDeliveryReportSchema = z.object({
 
 export class CreateDeliveryReport extends createZodDto(
   z.object({ deliveryReports: z.array(CreateDeliveryReportSchema) }),
-) { }
+) {}
 
 const CreateInvoiceReportSchema = z.object({
   dateShipped: z.string(),
@@ -103,4 +103,49 @@ const CreateInvoiceReportSchema = z.object({
 
 export class CreateInvoiceReport extends createZodDto(
   z.object({ invoiceReports: z.array(CreateInvoiceReportSchema) }),
-) { }
+) {}
+
+const ListReportSchema = z.object({
+  offset: z.string().optional(),
+  limit: z.string().optional(),
+  monthly: z.string().refine(
+    (deliveryDate) => {
+      if (deliveryDate) {
+        return DateTime.fromFormat(deliveryDate, 'MM/yyyy').isValid;
+      }
+      return true;
+    },
+    { message: 'deliveryDate: is invalid date' },
+  ),
+});
+
+export class ListReports extends createZodDto(ListReportSchema) {}
+
+const ListDeliveryReportSchema = z.object({
+  offset: z.string().optional(),
+  limit: z.string().optional(),
+  dateStart: z.string().optional(),
+  dateEnd: z.string().optional(),
+});
+
+export class ListDeliveryReport extends createZodDto(
+  ListDeliveryReportSchema,
+) {}
+
+const CreateUserSchema = z.object({
+  username: z.string(),
+  name: z.string(),
+  division: z.string(),
+  role: z.enum(['admin', 'operator']).optional(),
+});
+
+export class CreateUser extends createZodDto(CreateUserSchema) {}
+
+const ListUserSchema = z.object({
+  offset: z.string().optional(),
+  limit: z.string().optional(),
+  username: z.string().optional(),
+  name: z.string().optional(),
+});
+
+export class ListUsers extends createZodDto(ListUserSchema) {}

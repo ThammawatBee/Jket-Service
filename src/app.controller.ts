@@ -1,14 +1,29 @@
-import { Body, Controller, Get, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Post,
+  Query,
+  Res,
+  UseGuards,
+} from '@nestjs/common';
+import { Response } from 'express';
 import { AppService } from './app.service';
 import {
   CreateDeliveryReport,
   CreateInvoiceReport,
   CreateReport,
+  ListDeliveryReport,
+  ListReports,
 } from './schema/zod';
+import { JwtAuthGuard } from './module/auth/jwt-auth.guard';
+import { User } from './decorator/user.decorator';
+import { UserPayload } from './types/user-payload.interface';
 
+@UseGuards(JwtAuthGuard)
 @Controller()
 export class AppController {
-  constructor(private readonly appService: AppService) { }
+  constructor(private readonly appService: AppService) {}
 
   @Get()
   getHello(): string {
@@ -40,14 +55,37 @@ export class AppController {
   }
 
   @Get('/reports')
-  async listReports() {
-    const reports = await this.appService.listReports();
-    return { reports };
+  async listReports(@Query() query: ListReports) {
+    const result = await this.appService.listReports(query);
+    return {
+      reports: result.reports,
+      count: result.count,
+    };
+  }
+
+  @Get('/reports/export')
+  async exportReports(@Res() res: Response, @Query() query: ListReports) {
+    return this.appService.exportReport(res, query);
   }
 
   @Get('/deliveries')
-  async listDeliveries() {
-    const deliveryReports = await this.appService.listDeliveryReports();
-    return { deliveryReports };
+  async listDeliveries(@Query() query: ListDeliveryReport) {
+    const result = await this.appService.listDeliveryReports(query);
+    return { deliveryReports: result.deliveryReports, count: result.count };
+  }
+
+  @Get('/deliveries/export')
+  async exportEquipments(
+    @Res() res: Response,
+    @Query() query: ListDeliveryReport,
+  ) {
+    return this.appService.exportDeliveryReport(res, query); // stream to client
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('/test')
+  test(@User() user: UserPayload) {
+    console.log('user', user);
+    return { status: 'test' };
   }
 }
