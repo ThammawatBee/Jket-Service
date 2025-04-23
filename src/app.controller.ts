@@ -1,4 +1,12 @@
-import { Body, Controller, Get, Post, Query, Res } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Post,
+  Query,
+  Res,
+  UseGuards,
+} from '@nestjs/common';
 import { Response } from 'express';
 import { AppService } from './app.service';
 import {
@@ -8,7 +16,11 @@ import {
   ListDeliveryReport,
   ListReports,
 } from './schema/zod';
+import { JwtAuthGuard } from './module/auth/jwt-auth.guard';
+import { User } from './decorator/user.decorator';
+import { UserPayload } from './types/user-payload.interface';
 
+@UseGuards(JwtAuthGuard)
 @Controller()
 export class AppController {
   constructor(private readonly appService: AppService) {}
@@ -68,5 +80,12 @@ export class AppController {
     @Query() query: ListDeliveryReport,
   ) {
     return this.appService.exportDeliveryReport(res, query); // stream to client
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('/test')
+  test(@User() user: UserPayload) {
+    console.log('user', user);
+    return { status: 'test' };
   }
 }

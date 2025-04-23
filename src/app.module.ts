@@ -8,6 +8,8 @@ import { Report } from './entities/report.entity';
 import { Delivery } from './entities/delivery.entity';
 import { APP_PIPE } from '@nestjs/core';
 import { ZodValidationPipe } from 'nestjs-zod';
+import { UserModule } from './module/user/userModule';
+import { AuthModule } from './module/auth/authModule';
 
 @Module({
   imports: [
@@ -22,6 +24,8 @@ import { ZodValidationPipe } from 'nestjs-zod';
       inject: [ConfigService],
     }),
     TypeOrmModule.forFeature([Report, Delivery]),
+    UserModule,
+    AuthModule,
   ],
   controllers: [AppController],
   providers: [

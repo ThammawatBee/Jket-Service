@@ -32,48 +32,49 @@ export class AppService {
   }
   public async createReports(payload: CreateReport) {
     const reports = payload.reports;
-    let createReport: Partial<Report>[] = [];
+    const cleanReports = this.deduplicateHandle(reports, 'delNumber');
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
     try {
-      for (const report of reports) {
-        createReport = [
-          ...createReport,
-          {
-            plantCode: report.plantCode,
-            venderCode: report.venderCode,
-            delNumber: report.delNumber,
-            delDate: report.delDate,
-            delPeriod: report.delPeriod,
-            delSlideDate: report.delSlideDate || null,
-            delSlidePeriod: report.delSlidePeriod,
-            receivedDate: report.receivedDate,
-            delCtl: report.delCtl,
-            workGroup: report.workGroup,
-            poNo: report.poNo,
-            materialName: report.materialName,
-            materialNo: report.materialNo,
-            poQty: report.poQty,
-            receiveQty: report.receiveQty,
-            receiveArea: report.receiveArea,
-            followingProc: report.followingProc,
-            privilegeFlag: report.privilegeFlag,
-            barcodeStatus: report.barcodeStatus,
-            tagId: report.tagId,
-            organizeId: report.organizeId,
-            vatSaleFlag: report.vatSaleFlag,
-          },
-        ];
-      }
-      if (createReport?.length) {
-        const chunks = chunk(createReport, 200);
-        for (const chunk of chunks) {
-          await this.reportRepository.save(chunk);
-        }
+      for (const batch of chunk(cleanReports, 200)) {
+        await this.reportRepository
+          .createQueryBuilder()
+          .insert()
+          .values(batch as Partial<Report>)
+          .orUpdate({
+            conflict_target: ['del_number'],
+            overwrite: [
+              'plant_code',
+              'vender_code',
+              'del_number',
+              'del_date',
+              'del_period',
+              'del_slide_date',
+              'del_slide_period',
+              'received_date',
+              'del_ctl',
+              'work_group',
+              'po_no',
+              'material_name',
+              'material_no',
+              'po_qty',
+              'receive_qty',
+              'receive_area',
+              'following_proc',
+              'privilege_flag',
+              'barcode_status',
+              'tag_id',
+              'organize_id',
+              'vat_sale_flag',
+              'updated_at',
+            ],
+          })
+          .execute();
       }
       await queryRunner.commitTransaction();
     } catch (err) {
+      console.log('err', err)
       await queryRunner.rollbackTransaction();
       throw new HttpException(
         {
@@ -87,39 +88,56 @@ export class AppService {
     }
   }
 
+  private deduplicateHandle = <T extends Record<string, any>>(
+    payloads: T[],
+    key: keyof T,
+  ): T[] => {
+    const map = new Map<string, any>();
+
+    for (const payload of payloads) {
+      map.set(payload[key], payload); // keeps the *last* one
+    }
+
+    return Array.from(map.values());
+  };
+
   public async createDeliveryReport(payload: CreateDeliveryReport) {
     const deliveryReports = payload.deliveryReports;
-    let createDeliveryReport: Partial<Delivery>[] = [];
     const queryRunner = this.dataSource.createQueryRunner();
+    const cleanDeliveryReports = this.deduplicateHandle(
+      deliveryReports,
+      'deliveryNo',
+    );
     await queryRunner.connect();
     await queryRunner.startTransaction();
     try {
-      for (const deliveryReport of deliveryReports) {
-        createDeliveryReport = [
-          ...createDeliveryReport,
-          {
-            venderCode: deliveryReport.venderCode,
-            plantCode: deliveryReport.plantCode as DeliveryPlantCodeType,
-            deliveryNo: deliveryReport.deliveryNo,
-            deliveryDate: deliveryReport.deliveryDate,
-            partNo: deliveryReport.partNo,
-            qty: deliveryReport.qty,
-            receiveArea: deliveryReport.receiveArea,
-            followingProc: deliveryReport.followingProc,
-            vat: deliveryReport.vat,
-            privilegeFlag: deliveryReport.privilegeFlag,
-            referenceNoTag: deliveryReport.referenceNoTag,
-          },
-        ];
-      }
-      if (createDeliveryReport?.length) {
-        const chunks = chunk(createDeliveryReport, 200);
-        for (const chunk of chunks) {
-          await this.deliveryRepository.save(chunk);
-        }
+      for (const batch of chunk(cleanDeliveryReports, 200)) {
+        await this.deliveryRepository
+          .createQueryBuilder()
+          .insert()
+          .values(batch as Partial<Delivery>)
+          .orUpdate({
+            conflict_target: ['delivery_no'],
+            overwrite: [
+              'vender_code',
+              'plant_code',
+              'delivery_no',
+              'delivery_date',
+              'part_no',
+              'qty',
+              'receive_area',
+              'following_proc',
+              'vat',
+              'privilege_flag',
+              'reference_no_tag',
+              'updated_at',
+            ],
+          })
+          .execute();
       }
       await queryRunner.commitTransaction();
     } catch (err) {
+      console.log('err', err);
       await queryRunner.rollbackTransaction();
       throw new HttpException(
         {

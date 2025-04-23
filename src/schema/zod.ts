@@ -131,3 +131,21 @@ const ListDeliveryReportSchema = z.object({
 export class ListDeliveryReport extends createZodDto(
   ListDeliveryReportSchema,
 ) {}
+
+const CreateUserSchema = z.object({
+  username: z.string(),
+  name: z.string(),
+  division: z.string(),
+  role: z.enum(['admin', 'operator']).optional(),
+});
+
+export class CreateUser extends createZodDto(CreateUserSchema) {}
+
+const ListUserSchema = z.object({
+  offset: z.string().optional(),
+  limit: z.string().optional(),
+  username: z.string().optional(),
+  name: z.string().optional(),
+});
+
+export class ListUsers extends createZodDto(ListUserSchema) {}
