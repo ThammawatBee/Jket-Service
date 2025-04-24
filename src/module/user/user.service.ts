@@ -11,7 +11,7 @@ import * as bcrypt from 'bcrypt';
 import { RoleType, User } from '../../entities/user.entity';
 import { CreateUser, ListUsers } from 'src/schema/zod';
 
-const JWT_INIT_PASSWORD = process.env.JWT_INIT_PASSWORD || 'jtketpassword';
+const JWT_INIT_PASSWORD = process.env.JWT_INIT_PASSWORD || 'JtektP@ssw0rd';
 
 @Injectable()
 export class UserService {
