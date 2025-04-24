@@ -19,7 +19,7 @@ export class AuthService {
 
   async login(user: any) {
     const payload = { sub: user.id, username: user.username };
-    const token = jwt.sign(payload, JWT_SECRET, { expiresIn: '1h' });
+    const token = jwt.sign(payload, JWT_SECRET, { expiresIn: '2h' });
     return { access_token: token };
   }
 
