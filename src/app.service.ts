@@ -15,6 +15,7 @@ import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
 import { Delivery, DeliveryPlantCodeType } from './entities/delivery.entity';
 import get from 'lodash/get';
+import { groupBy, sortBy, sumBy, values } from 'lodash';
 
 Settings.defaultZone = 'Asia/Bangkok';
 
@@ -74,7 +75,7 @@ export class AppService {
       }
       await queryRunner.commitTransaction();
     } catch (err) {
-      console.log('err', err)
+      console.log('err', err);
       await queryRunner.rollbackTransaction();
       throw new HttpException(
         {
@@ -503,5 +504,199 @@ export class AppService {
     worksheet.commit(); // commit worksheet
 
     await workbook.commit();
+  }
+
+  public async listBilling() {
+    const data = await this.reportRepository
+      .createQueryBuilder('report')
+      .select([
+        'DISTINCT(report.invoiceInvoiceNo)', // 1. original string field
+        'CAST(report.invoiceInvoiceNo AS INTEGER) AS invoiceInvoiceNoNumber', // 2. also casted number field
+      ])
+      .where('report.invoiceInvoiceNo IS NOT NULL')
+      .andWhere('report.deliveryDeliveryNo is NOT NULL')
+      .orderBy('invoiceInvoiceNoNumber', 'ASC')
+      .getRawMany();
+    return data;
+  }
+
+  private async exportDITTFile(
+    worksheet: ExcelJS.Worksheet,
+    workbook: ExcelJS.stream.xlsx.WorkbookWriter,
+    reports: Report[],
+  ) {
+    worksheet.columns = [
+      { header: 'id_code', key: 'idCode', width: 20 },
+      { header: 'vendor_code', key: 'venderCode', width: 20 },
+      { header: 'plant_code', key: 'plantCode', width: 20 },
+      { header: 'delivery_no', key: 'deliveryNo', width: 20 },
+      { header: 'delivery_date', key: 'deliveryDate', width: 20 },
+      { header: 'part_no', key: 'partNo', width: 20 },
+      { header: 'qty', key: 'qty', width: 20 },
+      { header: 'receive_area', key: 'receiveArea', width: 20 },
+      { header: 'following_proc', key: 'followingProc', width: 20 },
+      { header: 'create_date', key: 'createDate', width: 20 },
+      { header: 'create_time', key: 'createTime', width: 20 },
+      { header: 'invoice_no', key: 'invoiceNo', width: 20 },
+      { header: 'invoice_date', key: 'invoiceDate', width: 20 },
+      { header: 'privilege_flag', key: 'privilegeFlag', width: 20 },
+      { header: 'reference_no_tag', key: 'referenceNoTag', width: 20 },
+      { header: 'branch_id', key: 'branchId', width: 20 },
+    ];
+    const sortedReports = sortBy(
+      reports,
+      (report) => +report.invoiceInvoiceNo,
+      ['ASC'],
+    );
+
+    sortedReports.forEach((report) => {
+      worksheet
+        .addRow({
+          idCode: 'VM1050',
+          venderCode: report.venderCode,
+          plantCode: report.plantCode,
+          deliveryNo: report.delNumber,
+          deliveryDate: report.deliveryDeliveryDate
+            ? DateTime.fromISO(
+              report.deliveryDeliveryDate.toISOString(),
+            ).toFormat('dd/MM/yyyy')
+            : '',
+          partNo: report.materialNo,
+          qty: report.poQty,
+          receiveArea: report.receiveArea,
+          followingProc: report.followingProc,
+          createDate: DateTime.now().toFormat('dd/MM/yyyy'),
+          createTime: DateTime.now().toFormat('HH:mm'),
+          invoiceNo: report.invoiceInvoiceNo,
+          invoiceDate: report.invoiceDateShipped,
+          privilegeFlag: report.privilegeFlag,
+          referenceNoTag: report.deliveryReferenceNoTag,
+          branchId: '0000',
+        })
+        .commit(); // important in streaming mode
+    });
+    worksheet.commit(); // commit worksheet
+    await workbook.commit();
+  }
+
+  private async exportDITFile(
+    worksheet: ExcelJS.Worksheet,
+    workbook: ExcelJS.stream.xlsx.WorkbookWriter,
+    reports: Report[],
+  ) {
+    worksheet.columns = [
+      { header: 'id_code', key: 'idCode', width: 20 },
+      { header: 'vendor_code', key: 'venderCode', width: 20 },
+      { header: 'plant_code', key: 'plantCode', width: 20 },
+      { header: 'invoice_no', key: 'invoiceNo', width: 20 },
+      { header: 'invoice_date', key: 'invoiceDate', width: 20 },
+      { header: 'receive_date', key: 'receiveDate', width: 20 },
+      { header: 'part_no', key: 'partNo', width: 20 },
+      { header: 'qty', key: 'qty', width: 20 },
+      { header: 'unit_price', key: 'unitPrice', width: 20 },
+      { header: 'amount', key: 'amount', width: 20 },
+      { header: 'vat', key: 'vat', width: 20 },
+      { header: 'create_date', key: 'createDate', width: 20 },
+      { header: 'create_time', key: 'createTime', width: 20 },
+      { header: 'privilege_flag', key: 'privilegeFlag', width: 20 },
+      { header: 'branch_id', key: 'branchId', width: 20 },
+    ];
+    const groupReportByInvoiceInvoiceNo = groupBy(
+      sortBy(reports, (report) => +report.invoiceInvoiceNo, ['ASC']),
+      (report) => report.invoiceInvoiceNo,
+    );
+    console.log('groupReportByInvoiceInvoiceNo', groupReportByInvoiceInvoiceNo);
+    values(groupReportByInvoiceInvoiceNo).forEach((reportGroup) => {
+      console.log('reportGroup', reportGroup);
+      reportGroup.forEach((report) => {
+        worksheet
+          .addRow({
+            idCode: 'VM1050',
+            venderCode: report.venderCode,
+            plantCode: report.plantCode,
+            invoiceNo: report.invoiceInvoiceNo,
+            invoiceDate: report.invoiceDateShipped,
+            receiveDate: DateTime.fromISO(
+              report.receivedDate.toISOString(),
+            ).toFormat('dd/MM/yyyy'),
+            partNo: report.materialNo,
+            qty: report.poQty,
+            unitPrice: report.invoicePrice,
+            amount: report.invoiceSalesAmount,
+            vat: report.vatSaleFlag,
+            createDate: DateTime.now().toFormat('dd/MM/yyyy'),
+            createTime: DateTime.now().toFormat('HH:mm'),
+            privilegeFlag: report.privilegeFlag,
+            branchId: '0000',
+          })
+          .commit(); // important in streaming mode
+      });
+      worksheet
+        .addRow({
+          idCode: 'VM1050',
+          venderCode: reports[0].venderCode,
+          plantCode: reports[0].plantCode,
+          invoiceNo: reports[0].invoiceInvoiceNo,
+          invoiceDate: reports[0].invoiceDateShipped,
+          receiveDate: DateTime.fromISO(
+            reports[0].receivedDate.toISOString(),
+          ).toFormat('dd/MM/yyyy'),
+          partNo: '999999999999999',
+          qty: reports.length,
+          unitPrice: '',
+          amount: sumBy(reports, (report) => +report.invoiceSalesAmount),
+          vat: 0,
+          createDate: DateTime.now().toFormat('dd/MM/yyyy'),
+          createTime: DateTime.now().toFormat('HH:mm'),
+          privilegeFlag: reports[0].privilegeFlag,
+          branchId: '0000',
+        })
+        .commit(); // important in streaming mode
+    });
+    worksheet.commit(); // commit worksheet
+    await workbook.commit();
+  }
+
+  public async exportBilling(
+    response: Response,
+    billings: string[],
+    billingType: string,
+  ) {
+    response.setHeader(
+      'Content-Type',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    );
+    response.setHeader(
+      'Content-Disposition',
+      'attachment; filename=billings.xlsx',
+    );
+    const reports = await this.reportRepository
+      .createQueryBuilder('report')
+      .where('report.invoiceInvoiceNo IS NOT NULL')
+      .andWhere('report.deliveryDeliveryNo is NOT NULL')
+      .andWhere('report.invoiceInvoiceNo IN(:...billings)', {
+        billings: billings,
+      })
+      .getMany();
+    if (!reports?.length) {
+      throw new HttpException(
+        {
+          status: HttpStatus.NOT_FOUND,
+          detail: 'Not found any billing',
+        },
+        HttpStatus.NOT_FOUND,
+      );
+    }
+    const workbook = new ExcelJS.stream.xlsx.WorkbookWriter({
+      stream: response, // STREAM directly to response
+      useStyles: true,
+      useSharedStrings: true,
+    });
+    const worksheet = workbook.addWorksheet('Billing');
+    if (billingType === 'DIT') {
+      await this.exportDITFile(worksheet, workbook, reports);
+    } else {
+      await this.exportDITTFile(worksheet, workbook, reports);
+    }
   }
 }

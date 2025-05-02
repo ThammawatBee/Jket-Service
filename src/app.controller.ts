@@ -13,6 +13,7 @@ import {
   CreateDeliveryReport,
   CreateInvoiceReport,
   CreateReport,
+  ExportBilling,
   ListDeliveryReport,
   ListReports,
 } from './schema/zod';
@@ -23,7 +24,7 @@ import { UserPayload } from './types/user-payload.interface';
 @UseGuards(JwtAuthGuard)
 @Controller()
 export class AppController {
-  constructor(private readonly appService: AppService) {}
+  constructor(private readonly appService: AppService) { }
 
   @Get()
   getHello(): string {
@@ -74,12 +75,23 @@ export class AppController {
     return { deliveryReports: result.deliveryReports, count: result.count };
   }
 
+  @Get('/billing')
+  async listBilling() {
+    const data = await this.appService.listBilling();
+    return { billings: data };
+  }
+
   @Get('/deliveries/export')
   async exportEquipments(
     @Res() res: Response,
     @Query() query: ListDeliveryReport,
   ) {
     return this.appService.exportDeliveryReport(res, query); // stream to client
+  }
+
+  @Post('/billing/export')
+  async exportBillings(@Res() res: Response, @Body() body: ExportBilling) {
+    return this.appService.exportBilling(res, body.billings, body.type); // stream to client
   }
 
   @UseGuards(JwtAuthGuard)

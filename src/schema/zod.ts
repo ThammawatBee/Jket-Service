@@ -1,6 +1,6 @@
 import { DateTime } from 'luxon';
 import { createZodDto } from 'nestjs-zod';
-import { z } from 'nestjs-zod/z';
+import { password, z } from 'nestjs-zod/z';
 
 const CreateReportSchema = z.object({
   plantCode: z.string(),
@@ -149,3 +149,21 @@ const ListUserSchema = z.object({
 });
 
 export class ListUsers extends createZodDto(ListUserSchema) {}
+
+const ResetPasswordSchema = z.object({
+  password: z.string(),
+});
+
+export class ResetPassword extends createZodDto(ResetPasswordSchema) {}
+
+const ResetInitialPasswordSchema = z.object({
+  userId: z.string(),
+});
+
+export class ResetInitialPassword extends createZodDto(
+  ResetInitialPasswordSchema,
+) {}
+
+export class ExportBilling extends createZodDto(
+  z.object({ billings: z.array(z.string()), type: z.string() }),
+) {}

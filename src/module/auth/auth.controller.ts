@@ -19,6 +19,16 @@ export class AuthController {
   }
 
   @UseGuards(JwtAuthGuard)
+  @Post('extend')
+  async extend(@User() user: UserPayload) {
+    console.log('user', user)
+    return this.authService.extendToken({
+      sub: user.sub,
+      username: user.username,
+    });
+  }
+
+  @UseGuards(JwtAuthGuard)
   @Get('me')
   async getMyProfile(@User() user: UserPayload) {
     const data = await this.authService.getMyProfile(user.username);
