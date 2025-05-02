@@ -575,6 +575,27 @@ export class AppService {
         })
         .commit(); // important in streaming mode
     });
+
+    worksheet
+      .addRow({
+        idCode: 'VM1050',
+        venderCode: reports[0].venderCode,
+        plantCode: reports[0].plantCode,
+        deliveryNo: '9999999999',
+        deliveryDate: '',
+        partNo: '',
+        qty: reports.length,
+        receiveArea: '',
+        followingProc: '',
+        createDate: DateTime.now().toFormat('dd/MM/yyyy'),
+        createTime: DateTime.now().toFormat('HH:mm'),
+        invoiceNo: '',
+        invoiceDate: '',
+        privilegeFlag: '',
+        referenceNoTag: '',
+        branchId: '',
+      })
+      .commit();
     worksheet.commit(); // commit worksheet
     await workbook.commit();
   }
