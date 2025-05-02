@@ -28,6 +28,12 @@ export class User {
   @Column()
   password: string;
 
+  @Column({
+    type: 'boolean',
+    default: true,
+  })
+  requirePasswordReset: boolean;
+
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
   createdAt: Date;
 

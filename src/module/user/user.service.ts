@@ -17,7 +17,7 @@ const JWT_INIT_PASSWORD = process.env.JWT_INIT_PASSWORD || 'JtektP@ssw0rd';
 export class UserService {
   constructor(
     @InjectRepository(User) private readonly userRepo: Repository<User>,
-  ) {}
+  ) { }
 
   async createUser(payload: CreateUser) {
     const existing = await this.userRepo.findOne({
@@ -57,6 +57,28 @@ export class UserService {
 
   async findByUsername(username: string) {
     return this.userRepo.findOne({ where: { username } });
+  }
+
+  async resetPassword(userId: string, password: string) {
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const result = await this.userRepo
+      .createQueryBuilder('user')
+      .update()
+      .set({ password: hashedPassword, requirePasswordReset: false })
+      .where('id = :id', { id: userId })
+      .execute();
+    return result;
+  }
+
+  async resetInitialPassword(userId: string) {
+    const hashedPassword = await bcrypt.hash(JWT_INIT_PASSWORD, 10);
+    const result = await this.userRepo
+      .createQueryBuilder('user')
+      .update()
+      .set({ password: hashedPassword, requirePasswordReset: true })
+      .where('id = :id', { id: userId })
+      .execute();
+    return result;
   }
 
   async listUsers(options: ListUsers) {
