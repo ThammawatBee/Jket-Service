@@ -241,6 +241,18 @@ export class Report {
   })
   deliveryReferenceNoTag: string;
 
+  @Column({
+    type: 'boolean',
+    default: false,
+  })
+  isExportedDIT: boolean;
+
+  @Column({
+    type: 'boolean',
+    default: false,
+  })
+  isExportedDITT: boolean;
+
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
   createdAt: Date;
 
