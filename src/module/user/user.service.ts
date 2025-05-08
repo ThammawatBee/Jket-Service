@@ -17,7 +17,7 @@ const JWT_INIT_PASSWORD = process.env.JWT_INIT_PASSWORD || 'JtektP@ssw0rd';
 export class UserService {
   constructor(
     @InjectRepository(User) private readonly userRepo: Repository<User>,
-  ) { }
+  ) {}
 
   async createUser(payload: CreateUser) {
     const existing = await this.userRepo.findOne({

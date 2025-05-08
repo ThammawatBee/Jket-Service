@@ -14,17 +14,19 @@ import {
   CreateInvoiceReport,
   CreateReport,
   ExportBilling,
+  ListBilling,
   ListDeliveryReport,
   ListReports,
 } from './schema/zod';
 import { JwtAuthGuard } from './module/auth/jwt-auth.guard';
 import { User } from './decorator/user.decorator';
 import { UserPayload } from './types/user-payload.interface';
+import { AdminGuard } from './module/auth/admin.guard';
 
 @UseGuards(JwtAuthGuard)
 @Controller()
 export class AppController {
-  constructor(private readonly appService: AppService) { }
+  constructor(private readonly appService: AppService) {}
 
   @Get()
   getHello(): string {
@@ -76,8 +78,8 @@ export class AppController {
   }
 
   @Get('/billing')
-  async listBilling() {
-    const data = await this.appService.listBilling();
+  async listBilling(@Query() query: ListBilling) {
+    const data = await this.appService.listBilling(query);
     return { billings: data };
   }
 
@@ -89,15 +91,20 @@ export class AppController {
     return this.appService.exportDeliveryReport(res, query); // stream to client
   }
 
+  @Post('/billing/text/export')
+  async exportBillingsText(@Res() res: Response, @Body() body: ExportBilling) {
+    return this.appService.exportBillingTXT(res, body.billings, body.type); // stream to client
+  }
+
   @Post('/billing/export')
   async exportBillings(@Res() res: Response, @Body() body: ExportBilling) {
     return this.appService.exportBilling(res, body.billings, body.type); // stream to client
   }
 
   @UseGuards(JwtAuthGuard)
+  @UseGuards(AdminGuard)
   @Get('/test')
   test(@User() user: UserPayload) {
-    console.log('user', user);
     return { status: 'test' };
   }
 }

@@ -3,6 +3,7 @@ import {
   CreateDeliveryReport,
   CreateInvoiceReport,
   CreateReport,
+  ListBilling,
   ListDeliveryReport,
   ListReports,
 } from './schema/zod';
@@ -16,6 +17,7 @@ import { DataSource, Repository } from 'typeorm';
 import { Delivery, DeliveryPlantCodeType } from './entities/delivery.entity';
 import get from 'lodash/get';
 import { groupBy, sortBy, sumBy, values } from 'lodash';
+import { PassThrough } from 'stream';
 
 Settings.defaultZone = 'Asia/Bangkok';
 
@@ -506,17 +508,53 @@ export class AppService {
     await workbook.commit();
   }
 
-  public async listBilling() {
-    const data = await this.reportRepository
+  public async listBilling(options: ListBilling) {
+    const { startDate, endDate, status } = options;
+    const query = this.reportRepository
       .createQueryBuilder('report')
       .select([
         'DISTINCT(report.invoiceInvoiceNo)', // 1. original string field
         'CAST(report.invoiceInvoiceNo AS INTEGER) AS invoiceInvoiceNoNumber', // 2. also casted number field
       ])
       .where('report.invoiceInvoiceNo IS NOT NULL')
-      .andWhere('report.deliveryDeliveryNo is NOT NULL')
-      .orderBy('invoiceInvoiceNoNumber', 'ASC')
-      .getRawMany();
+      .andWhere('report.deliveryDeliveryNo is NOT NULL');
+    if (startDate && endDate) {
+      query.andWhere('report.delDate >= :start AND report.delDate < :end', {
+        start: startDate,
+        end: endDate,
+      });
+    }
+    if (status && status !== 'ALL') {
+      if (status === 'NEW') {
+        query.andWhere('report.isExportedDIT = :status', {
+          status: false,
+        });
+        query.andWhere('report.isExportedDITT = :status', {
+          status: false,
+        });
+      }
+      if (status === 'EXPORTED') {
+        query.andWhere('report.isExportedDIT = :status', {
+          status: true,
+        });
+        query.andWhere('report.isExportedDITT = :status', {
+          status: true,
+        });
+      }
+      if (status === 'EXPORTED_DIT') {
+        query.andWhere('report.isExportedDIT = :status', {
+          status: true,
+        });
+      }
+      if (status === 'EXPORTED_DITT') {
+        query.andWhere('report.isExportedDITT = :status', {
+          status: true,
+        });
+      }
+    }
+    query.orderBy('invoiceInvoiceNoNumber', 'ASC');
+    const data = await query.getRawMany();
+
     return data;
   }
 
@@ -626,9 +664,7 @@ export class AppService {
       sortBy(reports, (report) => +report.invoiceInvoiceNo, ['ASC']),
       (report) => report.invoiceInvoiceNo,
     );
-    console.log('groupReportByInvoiceInvoiceNo', groupReportByInvoiceInvoiceNo);
     values(groupReportByInvoiceInvoiceNo).forEach((reportGroup) => {
-      console.log('reportGroup', reportGroup);
       reportGroup.forEach((report) => {
         worksheet
           .addRow({
@@ -678,6 +714,74 @@ export class AppService {
     await workbook.commit();
   }
 
+  private async exportDITFileTXT(stream: PassThrough, reports: Report[]) {
+    const groupReportByInvoiceInvoiceNo = groupBy(
+      sortBy(reports, (report) => +report.invoiceInvoiceNo, ['ASC']),
+      (report) => report.invoiceInvoiceNo,
+    );
+    values(groupReportByInvoiceInvoiceNo).forEach((reportGroup) => {
+      reportGroup.forEach((report) => {
+        stream.write(
+          `VM1050\t${report.venderCode}\t${report.plantCode}\t${report.invoiceInvoiceNo
+          }\t${report.invoiceDateShipped}\t${DateTime.fromISO(
+            report.receivedDate.toISOString(),
+          ).toFormat('dd/MM/yyyy')}\t${report.materialNo}\t${report.poQty}\t${report.invoicePrice
+          }\t${report.invoiceSalesAmount}\t${report.vatSaleFlag
+          }\t${DateTime.now().toFormat(
+            'dd/MM/yyyy',
+          )}\t${DateTime.now().toFormat('HH:mm')}\t${report.privilegeFlag
+          }\t0000\n`,
+        );
+      });
+      stream.write(
+        `VM1050\t${reports[0].venderCode}\t${reports[0].plantCode}\t${reports[0].invoiceInvoiceNo
+        }\t${reports[0].invoiceDateShipped}\t${DateTime.fromISO(
+          reports[0].receivedDate.toISOString(),
+        ).toFormat('dd/MM/yyyy')}\t999999999999999\t${reports.length
+        }\t${' '}\t${sumBy(
+          reports,
+          (report) => +report.invoiceSalesAmount,
+        )}\t${0}\t${DateTime.now().toFormat(
+          'dd/MM/yyyy',
+        )}\t${DateTime.now().toFormat('HH:mm')}\t${reports[0].privilegeFlag
+        }\t${'0000'}\n`,
+      );
+    });
+  }
+
+  private async exportDITTFileTXT(stream: PassThrough, reports: Report[]) {
+    const sortedReports = sortBy(
+      reports,
+      (report) => +report.invoiceInvoiceNo,
+      ['ASC'],
+    );
+
+    sortedReports.forEach((report) => {
+      stream.write(
+        `VM1050\t${report.venderCode}\t${report.plantCode}\t${report.delNumber
+        }\t${report.deliveryDeliveryDate
+          ? DateTime.fromISO(
+            report.deliveryDeliveryDate.toISOString(),
+          ).toFormat('dd/MM/yyyy')
+          : ''
+        }\t${report.materialNo}\t${report.poQty}\t${report.receiveArea}\t${report.followingProc
+        }\t${DateTime.now().toFormat('dd/MM/yyyy')}\t${DateTime.now().toFormat(
+          'HH:mm',
+        )}\t${report.invoiceInvoiceNo}\t${report.invoiceDateShipped}\t${report.privilegeFlag
+        }\t${report.deliveryReferenceNoTag}\t${'0000'}\n`,
+      );
+      stream.write(
+        `VM1050\t${reports[0].venderCode}\t${reports[0].plantCode
+        }\t9999999999\t${' '}\t${' '}\t${reports.length
+        }\t${' '}\t${' '}\t${DateTime.now().toFormat(
+          'dd/MM/yyyy',
+        )}\t${DateTime.now().toFormat(
+          'HH:mm',
+        )}\t${' '}\t${' '}\t${' '}\t${' '}\t${' '}\n`,
+      );
+    });
+  }
+
   public async exportBilling(
     response: Response,
     billings: string[],
@@ -716,8 +820,66 @@ export class AppService {
     const worksheet = workbook.addWorksheet('Billing');
     if (billingType === 'DIT') {
       await this.exportDITFile(worksheet, workbook, reports);
+      this.updateAlreadyExportedDIT(reports.map((report) => report.id));
     } else {
       await this.exportDITTFile(worksheet, workbook, reports);
+      this.updateAlreadyExportedDITT(reports.map((report) => report.id));
     }
+  }
+  public async exportBillingTXT(
+    response: Response,
+    billings: string[],
+    billingType: string,
+  ) {
+    response.setHeader('Content-Disposition', 'attachment; filename=data.txt');
+    response.setHeader('Content-Type', 'text/plain');
+
+    const stream = new PassThrough(); // This is a writable stream
+
+    // Start streaming to response
+    stream.pipe(response);
+    const reports = await this.reportRepository
+      .createQueryBuilder('report')
+      .where('report.invoiceInvoiceNo IS NOT NULL')
+      .andWhere('report.deliveryDeliveryNo is NOT NULL')
+      .andWhere('report.invoiceInvoiceNo IN(:...billings)', {
+        billings: billings,
+      })
+      .getMany();
+    if (!reports?.length) {
+      throw new HttpException(
+        {
+          status: HttpStatus.NOT_FOUND,
+          detail: 'Not found any billing',
+        },
+        HttpStatus.NOT_FOUND,
+      );
+    }
+    if (billingType === 'DIT') {
+      this.exportDITFileTXT(stream, reports);
+      this.updateAlreadyExportedDIT(reports.map((report) => report.id));
+    } else {
+      this.exportDITTFileTXT(stream, reports);
+      this.updateAlreadyExportedDITT(reports.map((report) => report.id));
+    }
+    stream.end();
+  }
+
+  private async updateAlreadyExportedDIT(reportIds: string[]) {
+    await this.reportRepository
+      .createQueryBuilder()
+      .update(Report)
+      .set({ isExportedDIT: true })
+      .where('id IN (:...reportIds)', { reportIds })
+      .execute();
+  }
+
+  private async updateAlreadyExportedDITT(reportIds: string[]) {
+    await this.reportRepository
+      .createQueryBuilder()
+      .update(Report)
+      .set({ isExportedDITT: true })
+      .where('id IN (:...reportIds)', { reportIds })
+      .execute();
   }
 }

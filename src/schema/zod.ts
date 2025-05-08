@@ -167,3 +167,13 @@ export class ResetInitialPassword extends createZodDto(
 export class ExportBilling extends createZodDto(
   z.object({ billings: z.array(z.string()), type: z.string() }),
 ) {}
+
+const ListBillingSchema = z.object({
+  offset: z.string().optional(),
+  limit: z.string().optional(),
+  startDate: z.string().optional(),
+  endDate: z.string().optional(),
+  status: z.string().optional(),
+});
+
+export class ListBilling extends createZodDto(ListBillingSchema) {}
