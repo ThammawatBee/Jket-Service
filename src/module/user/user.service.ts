@@ -17,7 +17,7 @@ const JWT_INIT_PASSWORD = process.env.JWT_INIT_PASSWORD || 'JtektP@ssw0rd';
 export class UserService {
   constructor(
     @InjectRepository(User) private readonly userRepo: Repository<User>,
-  ) {}
+  ) { }
 
   async createUser(payload: CreateUser) {
     const existing = await this.userRepo.findOne({
@@ -82,13 +82,16 @@ export class UserService {
   }
 
   async listUsers(options: ListUsers) {
-    const { username, name, offset, limit } = options;
+    const { username, name, offset, limit, division } = options;
     const query = this.userRepo.createQueryBuilder('user');
     if (username) {
       query.andWhere(`user.username ilike '%${username}%'`);
     }
     if (name) {
       query.andWhere(`user.name ilike '%${name}%'`);
+    }
+    if (division) {
+      query.andWhere(`user.division ilike '%${division}%'`);
     }
     const count = await query.getCount();
     query.orderBy('user.createdAt', 'DESC');
