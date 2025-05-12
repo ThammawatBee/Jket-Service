@@ -62,7 +62,7 @@ const CreateReportSchema = z.object({
 
 export class CreateReport extends createZodDto(
   z.object({ reports: z.array(CreateReportSchema) }),
-) {}
+) { }
 
 const CreateDeliveryReportSchema = z.object({
   venderCode: z.string(),
@@ -91,7 +91,7 @@ const CreateDeliveryReportSchema = z.object({
 
 export class CreateDeliveryReport extends createZodDto(
   z.object({ deliveryReports: z.array(CreateDeliveryReportSchema) }),
-) {}
+) { }
 
 const CreateInvoiceReportSchema = z.object({
   dateShipped: z.string(),
@@ -103,7 +103,7 @@ const CreateInvoiceReportSchema = z.object({
 
 export class CreateInvoiceReport extends createZodDto(
   z.object({ invoiceReports: z.array(CreateInvoiceReportSchema) }),
-) {}
+) { }
 
 const ListReportSchema = z.object({
   offset: z.string().optional(),
@@ -119,7 +119,7 @@ const ListReportSchema = z.object({
   ),
 });
 
-export class ListReports extends createZodDto(ListReportSchema) {}
+export class ListReports extends createZodDto(ListReportSchema) { }
 
 const ListDeliveryReportSchema = z.object({
   offset: z.string().optional(),
@@ -130,7 +130,7 @@ const ListDeliveryReportSchema = z.object({
 
 export class ListDeliveryReport extends createZodDto(
   ListDeliveryReportSchema,
-) {}
+) { }
 
 const CreateUserSchema = z.object({
   username: z.string(),
@@ -139,22 +139,23 @@ const CreateUserSchema = z.object({
   role: z.enum(['admin', 'operator']).optional(),
 });
 
-export class CreateUser extends createZodDto(CreateUserSchema) {}
+export class CreateUser extends createZodDto(CreateUserSchema) { }
 
 const ListUserSchema = z.object({
   offset: z.string().optional(),
   limit: z.string().optional(),
   username: z.string().optional(),
   name: z.string().optional(),
+  division: z.string().optional(),
 });
 
-export class ListUsers extends createZodDto(ListUserSchema) {}
+export class ListUsers extends createZodDto(ListUserSchema) { }
 
 const ResetPasswordSchema = z.object({
   password: z.string(),
 });
 
-export class ResetPassword extends createZodDto(ResetPasswordSchema) {}
+export class ResetPassword extends createZodDto(ResetPasswordSchema) { }
 
 const ResetInitialPasswordSchema = z.object({
   userId: z.string(),
@@ -162,11 +163,11 @@ const ResetInitialPasswordSchema = z.object({
 
 export class ResetInitialPassword extends createZodDto(
   ResetInitialPasswordSchema,
-) {}
+) { }
 
 export class ExportBilling extends createZodDto(
   z.object({ billings: z.array(z.string()), type: z.string() }),
-) {}
+) { }
 
 const ListBillingSchema = z.object({
   offset: z.string().optional(),
@@ -176,4 +177,4 @@ const ListBillingSchema = z.object({
   status: z.string().optional(),
 });
 
-export class ListBilling extends createZodDto(ListBillingSchema) {}
+export class ListBilling extends createZodDto(ListBillingSchema) { }
