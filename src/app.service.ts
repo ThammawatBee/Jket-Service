@@ -31,7 +31,7 @@ export class AppService {
     @InjectDataSource() private readonly dataSource: DataSource,
   ) { }
   getHello(): string {
-    return 'Hello World!';
+    return 'Service is already on';
   }
   public async createReports(payload: CreateReport) {
     const reports = payload.reports;
