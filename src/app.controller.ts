@@ -22,13 +22,15 @@ import { JwtAuthGuard } from './module/auth/jwt-auth.guard';
 import { User } from './decorator/user.decorator';
 import { UserPayload } from './types/user-payload.interface';
 import { AdminGuard } from './module/auth/admin.guard';
+import { Public } from './decorator/public.decorator';
 
 @UseGuards(JwtAuthGuard)
 @Controller()
 export class AppController {
   constructor(private readonly appService: AppService) {}
-
-  @Get()
+  
+  @Public()
+  @Get('/check-status')
   getHello(): string {
     return this.appService.getHello();
   }
