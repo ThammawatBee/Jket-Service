@@ -29,7 +29,7 @@ export class AppService {
     @InjectRepository(Delivery)
     private readonly deliveryRepository: Repository<Delivery>,
     @InjectDataSource() private readonly dataSource: DataSource,
-  ) {}
+  ) { }
   getHello(): string {
     return 'Service is already on';
   }
@@ -491,8 +491,8 @@ export class AppService {
             deliveryDeliveryNo: report.deliveryDeliveryNo,
             deliveryDeliveryDate: report.deliveryDeliveryDate
               ? DateTime.fromISO(
-                  report.deliveryDeliveryDate.toISOString(),
-                ).toFormat('d/M/yyyy')
+                report.deliveryDeliveryDate.toISOString(),
+              ).toFormat('d/M/yyyy')
               : '',
             deliveryPartNo: report.deliveryPartNo,
             deliveryQty: report.deliveryQty,
@@ -598,15 +598,15 @@ export class AppService {
     sortedReports.forEach((report) => {
       worksheet
         .addRow({
-          idCode: 'VM1050',
+          idCode: 'VMIT050',
           venderCode: report.venderCode,
           plantCode: report.plantCode,
           deliveryCtlNo: '',
           deliveryNo: report.delNumber,
           deliveryDate: report.deliveryDeliveryDate
             ? DateTime.fromISO(
-                report.deliveryDeliveryDate.toISOString(),
-              ).toFormat('d/M/yyyy')
+              report.deliveryDeliveryDate.toISOString(),
+            ).toFormat('d/M/yyyy')
             : '',
           deliveryPeriod: '',
           partNo: report.materialNo,
@@ -623,8 +623,8 @@ export class AppService {
             report.invoiceDateShipped,
             'yyyyMMdd',
           ).toFormat('d/M/yyyy'),
-          privilegeFlag: 'N' + report.privilegeFlag.slice(1),
-          referenceNoTag: report.deliveryReferenceNoTag,
+          privilegeFlag: report.privilegeFlag,
+          referenceNoTag: 'N' + report.deliveryReferenceNoTag.slice(1),
           branchId: '0000',
         })
         .commit(); // important in streaming mode
@@ -632,7 +632,7 @@ export class AppService {
 
     worksheet
       .addRow({
-        idCode: 'VM1050',
+        idCode: 'VMIT050',
         venderCode: reports[0].venderCode,
         plantCode: reports[0].plantCode,
         deliveryCtlNo: '',
@@ -689,7 +689,7 @@ export class AppService {
       reportGroup.forEach((report) => {
         worksheet
           .addRow({
-            idCode: 'VM1050',
+            idCode: 'VMI050',
             venderCode: report.venderCode,
             plantCode: report.plantCode,
             invoiceNo: report.invoiceInvoiceNo,
@@ -714,7 +714,7 @@ export class AppService {
       });
       worksheet
         .addRow({
-          idCode: 'VM1050',
+          idCode: 'VMI050',
           venderCode: reportGroup[0].venderCode,
           plantCode: reportGroup[0].plantCode,
           invoiceNo: reportGroup[0].invoiceInvoiceNo,
@@ -732,9 +732,9 @@ export class AppService {
           vat:
             reportGroup[0].vatSaleFlag === 'V'
               ? (
-                  sumBy(reportGroup, (report) => +report.invoiceSalesAmount) *
-                  0.07
-                ).toFixed(4)
+                sumBy(reportGroup, (report) => +report.invoiceSalesAmount) *
+                0.07
+              ).toFixed(4)
               : 0,
           createDate: DateTime.now().toFormat('d/M/yyyy'),
           createTime: DateTime.now().toFormat('HH:mm'),
@@ -755,42 +755,36 @@ export class AppService {
     values(groupReportByInvoiceInvoiceNo).forEach((reportGroup) => {
       reportGroup.forEach((report) => {
         stream.write(
-          `VM1050\t${report.venderCode}\t${report.plantCode}\t${
-            report.invoiceInvoiceNo
+          `VMI050\t${report.venderCode}\t${report.plantCode}\t${report.invoiceInvoiceNo
           }\t${DateTime.fromFormat(
             report.invoiceDateShipped,
             'yyyyMMdd',
           ).toFormat('d/M/yyyy')}\t${DateTime.fromISO(
             report.receivedDate.toISOString(),
-          ).toFormat('d/M/yyyy')}\t${report.materialNo}\t${report.poQty}\t${
-            report.invoicePrice
+          ).toFormat('d/M/yyyy')}\t${report.materialNo}\t${report.poQty}\t${report.invoicePrice
           }\t${report.invoiceSalesAmount}\t${''}\t${DateTime.now().toFormat(
             'd/M/yyyy',
-          )}\t${DateTime.now().toFormat('HH:mm')}\t${
-            report.privilegeFlag
+          )}\t${DateTime.now().toFormat('HH:mm')}\t${report.privilegeFlag
           }\t0000\n`,
         );
       });
       stream.write(
-        `VM1050\t${reportGroup[0].venderCode}\t${reportGroup[0].plantCode}\t${
-          reportGroup[0].invoiceInvoiceNo
+        `VMI050\t${reportGroup[0].venderCode}\t${reportGroup[0].plantCode}\t${reportGroup[0].invoiceInvoiceNo
         }\t${DateTime.fromFormat(
           reportGroup[0].invoiceDateShipped,
           'yyyyMMdd',
         ).toFormat('d/M/yyyy')}\t${DateTime.fromISO(
           reportGroup[0].receivedDate.toISOString(),
-        ).toFormat('d/M/yyyy')}\t9999999999999999\t${
-          reportGroup.length
+        ).toFormat('d/M/yyyy')}\t9999999999999999\t${reportGroup.length
         }\t${' '}\t${sumBy(
           reportGroup,
           (report) => +report.invoiceSalesAmount,
-        )}\t${
-          reportGroup[0].vatSaleFlag === 'V'
-            ? (
-                sumBy(reportGroup, (report) => +report.invoiceSalesAmount) *
-                0.07
-              ).toFixed(4)
-            : 0
+        )}\t${reportGroup[0].vatSaleFlag === 'V'
+          ? (
+            sumBy(reportGroup, (report) => +report.invoiceSalesAmount) *
+            0.07
+          ).toFixed(4)
+          : 0
         }\t${DateTime.now().toFormat('d/M/yyyy')}\t${DateTime.now().toFormat(
           'HH:mm',
         )}\t${reportGroup[0].privilegeFlag}\t${'0000'}\n`,
@@ -807,33 +801,26 @@ export class AppService {
 
     sortedReports.forEach((report) => {
       stream.write(
-        `VM1050\t${report.venderCode}\t${report.plantCode}\t${' '}\t${
-          report.delNumber
-        }\t${
-          report.deliveryDeliveryDate
-            ? DateTime.fromISO(
-                report.deliveryDeliveryDate.toISOString(),
-              ).toFormat('d/M/yyyy')
-            : ''
-        }\t${' '}\t${' '}\t${report.materialNo}\t${
-          report.poQty
+        `VMIT050\t${report.venderCode}\t${report.plantCode}\t${' '}\t${report.delNumber
+        }\t${report.deliveryDeliveryDate
+          ? DateTime.fromISO(
+            report.deliveryDeliveryDate.toISOString(),
+          ).toFormat('d/M/yyyy')
+          : ''
+        }\t${' '}\t${' '}\t${report.materialNo}\t${report.poQty
         }\t${' '}\t${' '}\t${report.receiveArea}\t${report.followingProc}\t
          ${' '}\t${DateTime.now().toFormat(
           'd/M/yyyy',
-        )}\t${DateTime.now().toFormat('HH:mm')}\t${
-          report.invoiceInvoiceNo
+        )}\t${DateTime.now().toFormat('HH:mm')}\t${report.invoiceInvoiceNo
         }\t${DateTime.fromFormat(
           report.invoiceDateShipped,
           'yyyyMMdd',
-        ).toFormat('d/M/yyyy')}\t${'N' + report.privilegeFlag.slice(1)}\t${
-          report.deliveryReferenceNoTag
+        ).toFormat('d/M/yyyy')}\t${report.privilegeFlag}\t${'N' +report.deliveryReferenceNoTag.slice(1)
         }\t${'0000'}\n`,
       );
       stream.write(
-        `VM1050\t${reports[0].venderCode}\t${
-          reports[0].plantCode
-        }\t9999999999\t${' '}\t${' '}\t${
-          reports.length
+        `VMIT050\t${reports[0].venderCode}\t${reports[0].plantCode
+        }\t9999999999\t${' '}\t${' '}\t${reports.length
         }\t${' '}\t${' '}\t${DateTime.now().toFormat(
           'd/M/yyyy',
         )}\t${DateTime.now().toFormat(
