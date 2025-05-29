@@ -758,57 +758,47 @@ export class AppService {
     values(groupReportByInvoiceInvoiceNo).forEach((reportGroup) => {
       reportGroup.forEach((report) => {
         stream.write(
-          `VMI050\t
-          ${report.venderCode}\t
-          ${report.plantCode}\t
-          ${report.invoiceInvoiceNo}\t
-          ${DateTime.fromFormat(report.invoiceDateShipped, 'yyyyMMdd').toFormat(
+          `VMI050\t${report.venderCode}\t${report.plantCode}\t${
+            report.invoiceInvoiceNo
+          }\t${DateTime.fromFormat(
+            report.invoiceDateShipped,
+            'yyyyMMdd',
+          ).toFormat('yyyy/MM/dd')}\t${DateTime.fromISO(
+            report.receivedDate.toISOString(),
+          ).toFormat('yyyy/MM/dd')}\t${report.materialNo}\t${
+            report.poQty
+          }\t${''}\t${report.invoicePrice}\t${
+            report.invoiceSalesAmount
+          }\t${''}\t${DateTime.now().toFormat(
             'yyyy/MM/dd',
-          )}\t
-          ${DateTime.fromISO(report.receivedDate.toISOString()).toFormat(
-            'yyyy/MM/dd',
-          )}\t
-          ${report.materialNo}\t
-          ${report.poQty}\t
-          ${''}\t
-          ${report.invoicePrice}\t
-          ${report.invoiceSalesAmount}\t
-          ${''}\t
-          ${DateTime.now().toFormat('yyyy/MM/dd')}\t
-          ${DateTime.now().toFormat('HH:mm')}\t
-          ${report.privilegeFlag}\t
-          0000\n`,
+          )}\t${DateTime.now().toFormat('HH:mm')}\t${
+            report.privilegeFlag
+          }\t0000\n`,
         );
       });
       stream.write(
-        `VMI050\t
-        ${reportGroup[0].venderCode}\t
-        ${reportGroup[0].plantCode}\t
-        ${reportGroup[0].invoiceInvoiceNo}\t
-        ${DateTime.fromFormat(
+        `VMI050\t${reportGroup[0].venderCode}\t${reportGroup[0].plantCode}\t${
+          reportGroup[0].invoiceInvoiceNo
+        }\t${DateTime.fromFormat(
           reportGroup[0].invoiceDateShipped,
           'yyyyMMdd',
-        ).toFormat('yyyy/MM/dd')}\t
-        ${DateTime.fromISO(reportGroup[0].receivedDate.toISOString()).toFormat(
-          'yyyy/MM/dd',
-        )}\t
-        9999999999999999\t
-        ${reportGroup.length}\t
-        ${''}\t
-        ${''}\t
-        ${sumBy(reportGroup, (report) => +report.invoiceSalesAmount)}\t
-        ${
+        ).toFormat('yyyy/MM/dd')}\t${DateTime.fromISO(
+          reportGroup[0].receivedDate.toISOString(),
+        ).toFormat('yyyy/MM/dd')}\t9999999999999999\t${
+          reportGroup.length
+        }\t${''}\t${''}\t${sumBy(
+          reportGroup,
+          (report) => +report.invoiceSalesAmount,
+        )}\t${
           reportGroup[0].vatSaleFlag === 'V'
             ? (
                 sumBy(reportGroup, (report) => +report.invoiceSalesAmount) *
                 0.07
               ).toFixed(4)
             : 0
-        }\t
-        ${DateTime.now().toFormat('yyyy/MM/dd')}\t
-        ${DateTime.now().toFormat('HH:mm')}\t
-        ${reportGroup[0].privilegeFlag}\t
-        ${'0000'}\n`,
+        }\t${DateTime.now().toFormat('yyyy/MM/dd')}\t${DateTime.now().toFormat(
+          'HH:mm',
+        )}\t${reportGroup[0].privilegeFlag}\t${'0000'}\n`,
       );
     });
   }
@@ -845,9 +835,7 @@ export class AppService {
       );
     });
     stream.write(
-      `VMIT050\t${'T043'}\t${
-        'D'
-      }\t${''}\t9999999999\t${''}\t${''}\t${''}\t${
+      `VMIT050\t${'T043'}\t${'D'}\t${''}\t9999999999\t${''}\t${''}\t${''}\t${
         reports.length
       }\t${''}\t${''}\t${''}\t${''}\t${''}\t${DateTime.now().toFormat(
         'yyyy/MM/dd',
