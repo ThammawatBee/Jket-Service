@@ -478,10 +478,12 @@ export class AppService {
             tagId: report.tagId,
             organizeId: report.organizeId,
             vatSaleFlag: report.vatSaleFlag,
-            invoiceDateShipped: DateTime.fromFormat(
-              report.invoiceDateShipped,
-              'yyyyMMdd',
-            ).toFormat('d/M/yyyy'),
+            invoiceDateShipped: report.invoiceDateShipped
+              ? DateTime.fromFormat(
+                  report.invoiceDateShipped,
+                  'yyyyMMdd',
+                ).toFormat('d/M/yyyy')
+              : '',
             invoiceInvoiceNo: report.invoiceInvoiceNo,
             invoiceCustomerOrderNumber: report.invoiceCustomerOrderNumber,
             invoicePrice: report.invoicePrice,
