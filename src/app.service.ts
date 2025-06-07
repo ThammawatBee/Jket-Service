@@ -29,7 +29,7 @@ export class AppService {
     @InjectRepository(Delivery)
     private readonly deliveryRepository: Repository<Delivery>,
     @InjectDataSource() private readonly dataSource: DataSource,
-  ) {}
+  ) { }
   getHello(): string {
     return 'Service is already on';
   }
@@ -283,7 +283,9 @@ export class AppService {
         end,
       });
     const count = await query.getCount();
-    query.addOrderBy('report.updatedAt', 'DESC');
+    query.addOrderBy('report.delDate', 'DESC');
+    query.addOrderBy('report.plantCode', 'ASC');
+    query.addOrderBy('CAST(RIGHT(report.delNumber, 5) AS INTEGER)', 'ASC');
     query.limit(+options.limit || 20);
     query.offset(+options.offset || 0);
     const reports = await query.getMany();
@@ -478,10 +480,12 @@ export class AppService {
             tagId: report.tagId,
             organizeId: report.organizeId,
             vatSaleFlag: report.vatSaleFlag,
-            invoiceDateShipped: DateTime.fromFormat(
-              report.invoiceDateShipped,
-              'yyyyMMdd',
-            ).toFormat('d/M/yyyy'),
+            invoiceDateShipped: report.invoiceDateShipped
+              ? DateTime.fromFormat(
+                  report.invoiceDateShipped,
+                  'yyyyMMdd',
+                ).toFormat('d/M/yyyy')
+              : '',
             invoiceInvoiceNo: report.invoiceInvoiceNo,
             invoiceCustomerOrderNumber: report.invoiceCustomerOrderNumber,
             invoicePrice: report.invoicePrice,
