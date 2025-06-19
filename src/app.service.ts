@@ -656,7 +656,7 @@ export class AppService {
       .addRow({
         idCode: 'VMIT50',
         venderCode: 'T043',
-        plantCode: 'D',
+        plantCode: reports?.[0]?.plantCode,
         deliveryCtlNo: '',
         deliveryNo: '9999999999',
         deliveryDate: '',
@@ -845,7 +845,7 @@ export class AppService {
       );
     });
     stream.write(
-      `VMIT50\t${'T043'}\t${'D'}\t${''}\t9999999999\t${''}\t${''}\t${''}\t${reports.length
+      `VMIT50\t${'T043'}\t${sortedReports[0].plantCode}\t${''}\t9999999999\t${''}\t${''}\t${''}\t${reports.length
       }\t${''}\t${''}\t${''}\t${''}\t${''}\t${DateTime.now().toFormat(
         'yyyy/MM/dd',
       )}\t${DateTime.now().toFormat(
