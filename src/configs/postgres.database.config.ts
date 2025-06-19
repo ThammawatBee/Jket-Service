@@ -4,7 +4,6 @@ import { Logger } from '@nestjs/common';
 import { DataSource } from 'typeorm';
 import { SnakeNamingStrategy } from 'typeorm-naming-strategies';
 import { PostgresConnectionOptions } from 'typeorm/driver/postgres/PostgresConnectionOptions';
-
 export const postgresDbConfig = (): PostgresConnectionOptions => ({
   type: 'postgres',
   host: 'dpg-cvr5rj6uk2gs73c9mk5g-a.singapore-postgres.render.com',
