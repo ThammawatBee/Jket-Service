@@ -282,7 +282,7 @@ export class AppService {
         start,
         end,
       });
-    if (options.status) {
+    if (options.status && options.status !== 'ALL') {
       if (options.status === 'NO_MERGE') {
         query
           .andWhere('report.invoiceInvoiceNo IS NULL')
@@ -827,7 +827,7 @@ export class AppService {
 
     sortedReports.forEach((report) => {
       stream.write(
-        `VMIT050\t${report.venderCode}\t${report.plantCode}\t${''}\t${report.delNumber
+        `VMIT50\t${report.venderCode}\t${report.plantCode}\t${''}\t${report.delNumber
         }\t${report.deliveryDeliveryDate
           ? DateTime.fromISO(
             report.deliveryDeliveryDate.toISOString(),
