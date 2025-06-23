@@ -17,7 +17,7 @@ const JWT_INIT_PASSWORD = process.env.JWT_INIT_PASSWORD || 'JtektP@ssw0rd';
 export class UserService {
   constructor(
     @InjectRepository(User) private readonly userRepo: Repository<User>,
-  ) { }
+  ) {}
 
   async createUser(payload: CreateUser) {
     const existing = await this.userRepo.findOne({
@@ -95,6 +95,13 @@ export class UserService {
     }
     const count = await query.getCount();
     query.orderBy('user.createdAt', 'DESC');
+    query.select([
+      'user.id',
+      'user.username',
+      'user.name',
+      'user.division',
+      'user.role',
+    ]);
     query.limit(+limit || 20);
     query.offset(+offset || 0);
     const users = await query.getMany();
