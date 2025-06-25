@@ -26,7 +26,7 @@ export class Delivery {
     // enum: DeliveryPlantCodeType,
     type: 'varchar',
   })
-  plantCode!: DeliveryPlantCodeType;
+  plantCode!: string;
 
   @Column({ type: 'varchar', nullable: false })
   venderCode!: string;

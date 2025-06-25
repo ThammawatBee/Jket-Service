@@ -290,9 +290,11 @@ export class AppService {
       }
       if (options.status === 'MERGE_WITH_INVOICE') {
         query.andWhere('report.invoiceInvoiceNo IS NOT NULL');
+        query.andWhere('report.deliveryDeliveryNo IS NULL');
       }
       if (options.status === 'MERGE_WITH_ORDER') {
         query.andWhere('report.deliveryDeliveryNo IS NOT NULL');
+        query.andWhere('report.invoiceInvoiceNo IS NULL');
       }
       if (options.status === 'ALREADY_MERGED') {
         query.andWhere('report.invoiceInvoiceNo IS NOT NULL');
@@ -780,7 +782,7 @@ export class AppService {
     values(groupReportByInvoiceInvoiceNo).forEach((reportGroup) => {
       reportGroup.forEach((report) => {
         stream.write(
-          `VMIT50\t${report.venderCode}\t${report.plantCode}\t${report.invoiceInvoiceNo
+          `VMI050\t${report.venderCode}\t${report.plantCode}\t${report.invoiceInvoiceNo
           }\t${DateTime.fromFormat(
             report.invoiceDateShipped,
             'yyyyMMdd',
