@@ -62,7 +62,7 @@ const CreateReportSchema = z.object({
 
 export class CreateReport extends createZodDto(
   z.object({ reports: z.array(CreateReportSchema) }),
-) {}
+) { }
 
 const CreateDeliveryReportSchema = z.object({
   venderCode: z.string(),
@@ -118,6 +118,7 @@ const ListReportSchema = z.object({
     { message: 'deliveryDate: is invalid date' },
   ),
   status: z.string().optional(),
+  plantCode: z.string().optional()
 });
 
 export class ListReports extends createZodDto(ListReportSchema) { }
@@ -127,6 +128,7 @@ const ListDeliveryReportSchema = z.object({
   limit: z.string().optional(),
   dateStart: z.string().optional(),
   dateEnd: z.string().optional(),
+  plantCode: z.string().optional(),
 });
 
 export class ListDeliveryReport extends createZodDto(

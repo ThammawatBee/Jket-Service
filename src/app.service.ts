@@ -29,7 +29,7 @@ export class AppService {
     @InjectRepository(Delivery)
     private readonly deliveryRepository: Repository<Delivery>,
     @InjectDataSource() private readonly dataSource: DataSource,
-  ) { }
+  ) {}
   getHello(): string {
     return 'Service is already on';
   }
@@ -301,6 +301,11 @@ export class AppService {
         query.andWhere('report.deliveryDeliveryNo IS NOT NULL');
       }
     }
+    if (options.plantCode && options.plantCode !== 'ALL') {
+      query.andWhere('report.plantCode ILIKE :plantCode', {
+        plantCode: options.plantCode,
+      });
+    }
     const count = await query.getCount();
     query.addOrderBy('report.delDate', 'DESC');
     query.addOrderBy('report.plantCode', 'ASC');
@@ -315,7 +320,7 @@ export class AppService {
   }
 
   public async listDeliveryReports(options: ListDeliveryReport) {
-    const { dateEnd, dateStart, offset, limit } = options;
+    const { dateEnd, dateStart, offset, limit, plantCode } = options;
     const query = this.deliveryRepository.createQueryBuilder('deliveryReport');
     if (dateStart && dateEnd) {
       query.andWhere(
@@ -325,6 +330,11 @@ export class AppService {
           dateEnd: DateTime.fromFormat(dateEnd, 'dd-MM-yyyy').toJSDate(),
         },
       );
+    }
+    if (plantCode && plantCode !== 'ALL') {
+      query.andWhere('deliveryReport.plantCode ILIKE :plantCode', {
+        plantCode,
+      });
     }
     const count = await query.getCount();
     query.orderBy('deliveryReport.deliveryDate', 'DESC');
@@ -418,6 +428,7 @@ export class AppService {
     });
     const worksheet = workbook.addWorksheet('Reports');
     worksheet.columns = [
+      { header: 'Status', key: 'status', width: 20 },
       { header: 'Plant Code', key: 'plantCode', width: 20 },
       { header: 'Vendor Code', key: 'venderCode', width: 20 },
       { header: 'Del No', key: 'delNumber', width: 20 },
@@ -470,9 +481,22 @@ export class AppService {
         limit: `${batchSize}`,
       });
       if (reports.length === 0) break;
+      const renderStatus = (report: Report) => {
+        if (report.invoiceInvoiceNo && report.deliveryDeliveryNo) {
+          return 'Merged All';
+        }
+        if (!report.invoiceInvoiceNo && !report.deliveryDeliveryNo) {
+          return 'No Merge';
+        }
+        if (report.invoiceInvoiceNo && !report.deliveryDeliveryNo) {
+          return 'Merge With Invoice';
+        }
+        return 'Merge With Order';
+      };
       reports.forEach((report) => {
         worksheet
           .addRow({
+            status: renderStatus(report),
             plantCode: report.plantCode,
             venderCode: report.venderCode,
             delNumber: report.delNumber,
