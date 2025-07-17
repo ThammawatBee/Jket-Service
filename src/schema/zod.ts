@@ -36,6 +36,9 @@ const CreateReportSchema = z.object({
     .string()
     .refine(
       (receivedDate) => {
+        if (!receivedDate) {
+          return false
+        }
         if (receivedDate) {
           return DateTime.fromFormat(receivedDate, 'dd/MM/yyyy').isValid;
         }
