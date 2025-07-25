@@ -278,7 +278,7 @@ export class AppService {
     const query = this.reportRepository
       .createQueryBuilder('report')
       .select('report')
-      .where('report.delDate >= :start AND report.delDate < :end', {
+      .where('report.delDate >= :start AND report.delDate <= :end', {
         start,
         end,
       });
@@ -570,9 +570,19 @@ export class AppService {
       .andWhere('report.deliveryDeliveryNo is NOT NULL')
       .andWhere('report.plantCode ILIKE :plantCode', { plantCode });
     if (startDate && endDate) {
-      query.andWhere('report.delDate >= :start AND report.delDate < :end', {
-        start: startDate,
-        end: endDate,
+      const start = DateTime.fromFormat(startDate, 'yyyyLLdd', {
+        zone: 'Asia/Bangkok',
+      })
+        .toUTC()
+        .toISO();
+      const end = DateTime.fromFormat(endDate, 'yyyyLLdd', {
+        zone: 'Asia/Bangkok',
+      })
+        .toUTC()
+        .toISO();
+      query.andWhere('report.delDate >= :start AND report.delDate <= :end', {
+        start: start,
+        end: end,
       });
     }
     if (status && status !== 'ALL') {
