@@ -785,13 +785,16 @@ export class AppService {
           qty: reportGroup.length,
           unit: '',
           unitPrice: '',
-          amount: sumBy(reportGroup, (report) => +report.invoiceSalesAmount),
+          amount: sumBy(
+            reportGroup,
+            (report) => +report.invoiceSalesAmount,
+          ).toFixed(2),
           vat:
             reportGroup[0].vatSaleFlag === 'V'
               ? (
                   sumBy(reportGroup, (report) => +report.invoiceSalesAmount) *
                   0.07
-                ).toFixed(4)
+                ).toFixed(2)
               : 0,
           createDate: DateTime.now().toFormat('d/M/yyyy'),
           createTime: DateTime.now().toFormat('HH:mm'),
@@ -843,12 +846,12 @@ export class AppService {
         }\t${''}\t${''}\t${sumBy(
           reportGroup,
           (report) => +report.invoiceSalesAmount,
-        )}\t${
+        ).toFixed(2)}\t${
           reportGroup[0].vatSaleFlag === 'V'
             ? (
                 sumBy(reportGroup, (report) => +report.invoiceSalesAmount) *
                 0.07
-              ).toFixed(4)
+              ).toFixed(2)
             : 0
         }\t${DateTime.now().toFormat('yyyy/MM/dd')}\t${DateTime.now().toFormat(
           'HH:mm',
