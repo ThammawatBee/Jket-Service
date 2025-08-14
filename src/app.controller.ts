@@ -27,8 +27,8 @@ import { Public } from './decorator/public.decorator';
 @UseGuards(JwtAuthGuard)
 @Controller()
 export class AppController {
-  constructor(private readonly appService: AppService) {}
-  
+  constructor(private readonly appService: AppService) { }
+
   @Public()
   @Get('/check-status')
   getHello(): string {
@@ -57,6 +57,12 @@ export class AppController {
   async mergeReportWithDeliveryReport() {
     await this.appService.mergeReportWithDeliveryReport();
     return { status: 'Merge data success' };
+  }
+
+  @Get('/reports/summary')
+  async listReportSummary(@Query() query: ListReports) {
+    const result = await this.appService.listReportSummary(query);
+    return { ...result };
   }
 
   @Get('/reports')

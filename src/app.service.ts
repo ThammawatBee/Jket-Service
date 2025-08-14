@@ -265,6 +265,58 @@ export class AppService {
     }
   }
 
+  public async listReportSummary(options: ListReports) {
+    const [month, year] = options.monthly.split('/');
+    const start = DateTime.fromObject({ year: +year, month: +month })
+      .startOf('month')
+      .toJSDate();
+    const end = DateTime.fromObject({ year: +year, month: +month })
+      .endOf('month')
+      .plus({ days: 1 })
+      .startOf('day')
+      .toJSDate();
+    const getSummary = async (type: string) => {
+      const query = this.reportRepository
+        .createQueryBuilder('report')
+        .select('report')
+        .where('report.delDate BETWEEN :start AND :end', {
+          start,
+          end,
+        });
+      if (type === 'NO_MERGE') {
+        query
+          .andWhere('report.invoiceInvoiceNo IS NULL')
+          .andWhere('report.deliveryDeliveryNo IS NULL');
+      }
+      if (type === 'MERGE_WITH_INVOICE') {
+        query.andWhere('report.invoiceInvoiceNo IS NOT NULL');
+        query.andWhere('report.deliveryDeliveryNo IS NULL');
+      }
+      if (type === 'MERGE_WITH_ORDER') {
+        query.andWhere('report.deliveryDeliveryNo IS NOT NULL');
+        query.andWhere('report.invoiceInvoiceNo IS NULL');
+      }
+      if (type === 'ALREADY_MERGED') {
+        query.andWhere('report.invoiceInvoiceNo IS NOT NULL');
+        query.andWhere('report.deliveryDeliveryNo IS NOT NULL');
+      }
+      const count = await query.getCount();
+      return count;
+    };
+    const ALL = await getSummary('');
+    const NO_MERGE = await getSummary('NO_MERGE');
+    const MERGE_WITH_INVOICE = await getSummary('MERGE_WITH_INVOICE');
+    const MERGE_WITH_ORDER = await getSummary('MERGE_WITH_ORDER');
+    const ALREADY_MERGED = await getSummary('ALREADY_MERGED');
+    return {
+      ALL,
+      NO_MERGE,
+      MERGE_WITH_INVOICE,
+      MERGE_WITH_ORDER,
+      ALREADY_MERGED,
+    };
+  }
+
   public async listReports(options: ListReports) {
     const [month, year] = options.monthly.split('/');
     const start = DateTime.fromObject({ year: +year, month: +month })
@@ -278,7 +330,7 @@ export class AppService {
     const query = this.reportRepository
       .createQueryBuilder('report')
       .select('report')
-      .where('report.delDate >= :start AND report.delDate <= :end', {
+      .where('report.delDate BETWEEN :start AND :end', {
         start,
         end,
       });
