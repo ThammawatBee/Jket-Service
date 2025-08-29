@@ -865,7 +865,7 @@ export class AppService {
             reportGroup[0].receivedDate.toISOString(),
           ).toFormat('d/M/yyyy'),
           partNo: '9999999999999999',
-          qty: reportGroup.length,
+          qty: values(groupByInvoiceNoAndMaterialNo).length,
           unit: '',
           unitPrice: '',
           amount: sumBy(
@@ -951,7 +951,7 @@ export class AppService {
         ).toFormat('yyyy/MM/dd')}\t${DateTime.fromISO(
           reportGroup[0].receivedDate.toISOString(),
         ).toFormat('yyyy/MM/dd')}\t9999999999999999\t${
-          reportGroup.length
+          values(groupByInvoiceNoAndMaterialNo).length
         }\t${''}\t${''}\t${sumBy(
           reportGroup,
           (report) => +report.invoiceSalesAmount,
