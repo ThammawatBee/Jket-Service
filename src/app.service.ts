@@ -815,7 +815,10 @@ export class AppService {
             qty: sumBy(group, (report) => +report.poQty),
             unit: '',
             unitPrice: group[0].invoicePrice,
-            amount: sumBy(group, (report) => +report.invoiceSalesAmount),
+            amount: sumBy(
+              group,
+              (report) => +report.invoiceSalesAmount,
+            ).toFixed(2),
             vat: '',
             createDate: DateTime.now().toFormat('d/M/yyyy'),
             createTime: DateTime.now().toFormat('HH:mm'),
@@ -915,7 +918,7 @@ export class AppService {
           )}\t${''}\t${group[0].invoicePrice}\t${sumBy(
             group,
             (report) => +report.invoiceSalesAmount,
-          )}\t${''}\t${DateTime.now().toFormat(
+          ).toFixed(2)}\t${''}\t${DateTime.now().toFormat(
             'yyyy/MM/dd',
           )}\t${DateTime.now().toFormat('HH:mm')}\t${
             group[0].privilegeFlag
